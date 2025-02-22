@@ -31,21 +31,23 @@ export default function HomeMap() {
     }
   };
 
-  // Add collision areas for lower floor furniture
-  const tvArea = {
-    x: 50,     // Left side position
-    y: 500,    // Moved up to account for doubled height
-    width: 100, // Width of TV
-    height: 100  // Height of TV
-  };
-
-  // Adjust wall area to be consistent across floors
-  const wallArea = {
-    x: 0,      // Start from the left edge
-    y: 0,      // Start from the top
-    width: boundaryWidth,  // Full width of the room
-    height: 350  // Height of wall portion
-  };
+  // Update wall areas to have a gap for the stairs
+  const wallAreas = [
+    {
+      // Left wall section
+      x: 0,
+      y: 0,
+      width: 320, // Stop where stairs begin (stairs.down.x)
+      height: 350
+    },
+    {
+      // Right wall section
+      x: 470,    // Start after stairs (stairs.down.x + stairs.down.width)
+      y: 0,
+      width: 330, // Rest of the wall to right edge
+      height: 350
+    }
+  ];
 
   // Add bed collision area
   const bedArea = {
@@ -61,6 +63,22 @@ export default function HomeMap() {
     y: 650,    // Keep same bottom position
     width: 300, // Doubled from 150 to 300
     height: 150 // Keep same height
+  };
+
+  // Update TV collision area with much taller height to include TV stand
+  const tvArea = {
+    x: 50,      // Keep same x position
+    y: 500,     // Keep same top position
+    width: 50,  // Keep same width
+    height: 200 // Increase height from 100 to 200 to extend to bottom of stand
+  };
+
+  // Update sofa collision area with increased height
+  const sofaArea = {
+    x: 200,     // Keep same x position
+    y: 550,     // Keep same y position
+    width: 120, // Keep same wider width
+    height: 150 // Increase height from 100 to 150 to extend lower
   };
 
   // Update collision box to be at Mickey's feet
@@ -89,17 +107,17 @@ export default function HomeMap() {
     }
   };
 
-  // Update collision detection to use centered collision box
+  // Update wall collision detection to check both wall sections
   const wouldCollideWithWall = (newX: number, newY: number) => {
-    if (currentFloor !== 'up') return false;
-
     const collisionBox = getCollisionBox({ x: newX, y: newY });
-    return (
-      collisionBox.x < wallArea.x + wallArea.width &&
-      collisionBox.x + collisionBox.width > wallArea.x &&
-      collisionBox.y < wallArea.y + wallArea.height &&
-      collisionBox.y + collisionBox.height > wallArea.y
-    );
+    
+    // Check collision with both wall sections
+    return wallAreas.some(wall => (
+      collisionBox.x < wall.x + wall.width &&
+      collisionBox.x + collisionBox.width > wall.x &&
+      collisionBox.y < wall.y + wall.height &&
+      collisionBox.y + collisionBox.height > wall.y
+    ));
   };
 
   // Update stairs collision detection
@@ -133,7 +151,7 @@ export default function HomeMap() {
     const wallCollision = wouldCollideWithWall(newX, newY);
     
     if (currentFloor === 'down') {
-        // Check TV collision for lower floor
+        // Add TV and sofa collision checks
         const tvCollision = (
             collisionBox.x < tvArea.x + tvArea.width &&
             collisionBox.x + collisionBox.width > tvArea.x &&
@@ -141,7 +159,14 @@ export default function HomeMap() {
             collisionBox.y + collisionBox.height > tvArea.y
         );
         
-        return wallCollision || tvCollision;
+        const sofaCollision = (
+            collisionBox.x < sofaArea.x + sofaArea.width &&
+            collisionBox.x + collisionBox.width > sofaArea.x &&
+            collisionBox.y < sofaArea.y + sofaArea.height &&
+            collisionBox.y + collisionBox.height > sofaArea.y
+        );
+        
+        return wallCollision || tvCollision || sofaCollision;
     } else {
         // Upper floor collisions (bed and bath)
         const bedCollision = (
