@@ -6,6 +6,7 @@ import { Wheat, MapPin, MessageSquare, HelpCircle } from "lucide-react"
 import { useState, useRef, useEffect, useCallback } from "react"
 import Modal from "@/components/Modal"
 import CloudTransition from "@/components/CloudTransition"
+import { Fireworks } from 'fireworks-js'
 
 export default function Dashboard() {
   const [isAISpeaking, setIsAISpeaking] = useState(false)
@@ -19,6 +20,10 @@ export default function Dashboard() {
   const [showAIHelp, setShowAIHelp] = useState(false)
   const [backgroundColor, setBackgroundColor] = useState("from-pink-300 to-yellow-200")
   const [customBgColor, setCustomBgColor] = useState<string | null>(null)
+
+  // Add fireworks ref
+  const fireworksContainer = useRef<HTMLDivElement>(null)
+  const fireworksInstance = useRef<Fireworks | null>(null)
 
   // Define the functions that can be called by the AI
   const fns = {
@@ -41,6 +46,26 @@ export default function Dashboard() {
       setModalMessage(message)
       setIsModalOpen(true)
       return { success: true, message: "Game invitation opened" }
+    },
+    showFireworks: ({ duration }: { duration: number }) => {
+      if (fireworksContainer.current && !fireworksInstance.current) {
+        fireworksInstance.current = new Fireworks(fireworksContainer.current, {
+          explosion: 10,
+          intensity: 30,
+          traceLength: 3,
+          delay: { min: 30, max: 60 },
+        })
+        fireworksInstance.current.start()
+        
+        // Stop after duration
+        setTimeout(() => {
+          if (fireworksInstance.current) {
+            fireworksInstance.current.stop()
+            fireworksInstance.current = null
+          }
+        }, duration)
+      }
+      return { success: true, message: "Fireworks started" }
     },
   }
 
@@ -108,6 +133,20 @@ export default function Dashboard() {
                     message: { 
                       type: "string", 
                       description: "The message to show in the game invitation" 
+                    },
+                  },
+                },
+              },
+              {
+                type: "function",
+                name: "showFireworks",
+                description: "Shows a fireworks animation on the screen",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    duration: {
+                      type: "number",
+                      description: "Duration in milliseconds to show the fireworks"
                     },
                   },
                 },
@@ -216,13 +255,19 @@ export default function Dashboard() {
 
   return (
     <div 
-      className="min-h-screen text-brown-800 font-bubblegum"
+      className="min-h-screen text-brown-800 font-bubblegum relative"
       style={{
         background: customBgColor 
           ? customBgColor 
           : 'linear-gradient(to bottom, rgb(249, 168, 212), rgb(254, 240, 138))'
       }}
     >
+      {/* Add fireworks container */}
+      <div 
+        ref={fireworksContainer} 
+        className="fixed inset-0 pointer-events-none z-50"
+      />
+      
       <CloudTransition isTransitioning={isEntering} />
       
       <nav className="bg-wood p-4 text-cream shadow-md border-b-4 border-brown-800">
