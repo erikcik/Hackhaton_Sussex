@@ -2,15 +2,23 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Wheat, MapPin, MessageSquare } from "lucide-react"
-import { useEffect, useRef, useState, useCallback } from "react"
+import { Wheat, MapPin, MessageSquare, HelpCircle } from "lucide-react"
+import { useState, useRef, useEffect, useCallback } from "react"
+import Modal from "@/components/Modal"
+import CloudTransition from "@/components/CloudTransition"
 
 export default function Dashboard() {
   const [isAISpeaking, setIsAISpeaking] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalMessage, setModalMessage] = useState("")
   const peerConnection = useRef<RTCPeerConnection | null>(null)
   const dataChannel = useRef<RTCDataChannel | null>(null)
   const audioStream = useRef<MediaStream | null>(null)
+  const [isEntering, setIsEntering] = useState(true)
+  const [showAIHelp, setShowAIHelp] = useState(false)
+  const [backgroundColor, setBackgroundColor] = useState("from-pink-300 to-yellow-200")
+  const [customBgColor, setCustomBgColor] = useState<string | null>(null)
 
   // Define the functions that can be called by the AI
   const fns = {
@@ -18,7 +26,7 @@ export default function Dashboard() {
       return { success: true, html: document.documentElement.outerHTML }
     },
     changeBackgroundColor: ({ color }: { color: string }) => {
-      document.body.style.backgroundColor = color
+      setCustomBgColor(color)
       return { success: true, color }
     },
     changeTextColor: ({ color }: { color: string }) => {
@@ -28,6 +36,11 @@ export default function Dashboard() {
     showFingers: async ({ numberOfFingers }: { numberOfFingers: number }) => {
       console.log(`Showing ${numberOfFingers} fingers`)
       return { success: true, numberOfFingers }
+    },
+    openGameInvite: ({ message }: { message: string }) => {
+      setModalMessage(message)
+      setIsModalOpen(true)
+      return { success: true, message: "Game invitation opened" }
     },
   }
 
@@ -56,6 +69,7 @@ export default function Dashboard() {
       setIsLoading(true)
       peerConnection.current = new RTCPeerConnection()
 
+      // ... existing WebRTC setup code ...
       peerConnection.current.ontrack = (event) => {
         const el = document.createElement("audio")
         el.srcObject = event.streams[0]
@@ -83,35 +97,20 @@ export default function Dashboard() {
                   },
                 },
               },
+              // ... other tools ...
               {
                 type: "function",
-                name: "changeTextColor",
-                description: "Changes the text color of a web page",
+                name: "openGameInvite",
+                description: "Opens a game invitation modal with a custom message",
                 parameters: {
                   type: "object",
                   properties: {
-                    color: { type: "string", description: "A hex value of the color" },
-                  },
-                },
-              },
-              {
-                type: "function",
-                name: "showFingers",
-                description: "Controls a robot hand to show a specific number of fingers",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    numberOfFingers: {
-                      enum: [1, 2, 3, 4, 5],
-                      description: "Values 1 through 5 of the number of fingers to hold up",
+                    message: { 
+                      type: "string", 
+                      description: "The message to show in the game invitation" 
                     },
                   },
                 },
-              },
-              {
-                type: "function",
-                name: "getPageHTML",
-                description: "Gets the HTML for the current page",
               },
             ],
           },
@@ -174,22 +173,12 @@ export default function Dashboard() {
           "Content-Type": "application/sdp",
         },
       })
-
-      if (!answerResponse.ok) {
-        const errorText = await answerResponse.text()
-        console.error("OpenAI API Error:", answerResponse.status, errorText)
-        setIsLoading(false)
-        setIsAISpeaking(false)
-        alert(`OpenAI API Error: ${answerResponse.status} - ${errorText}`)
-        return
-      }
       const answer = await answerResponse.text()
       if (!peerConnection.current) return
-
-      await peerConnection.current.setRemoteDescription(new RTCSessionDescription({
+      await peerConnection.current.setRemoteDescription({
         sdp: answer,
-        type: 'answer'
-      }))
+        type: "answer",
+      })
 
       setIsAISpeaking(true)
     } catch (error) {
@@ -214,23 +203,37 @@ export default function Dashboard() {
     }
   }, [stopConnection])
 
-  const handleVoiceChatError = (error: Error) => {
-    console.error('Voice chat error:', error)
-    setIsAISpeaking(false)
-    // You might want to show an error message to the user here
-  }
+  useEffect(() => {
+    // Start with transition visible
+    setIsEntering(true)
+    // After a brief moment, hide the transition
+    const timer = setTimeout(() => {
+      setIsEntering(false)
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-300 to-green-200 text-brown-800 font-bubblegum">
-      <nav className="bg-wood p-4 text-cream shadow-md">
+    <div 
+      className="min-h-screen text-brown-800 font-bubblegum"
+      style={{
+        background: customBgColor 
+          ? customBgColor 
+          : 'linear-gradient(to bottom, rgb(249, 168, 212), rgb(254, 240, 138))'
+      }}
+    >
+      <CloudTransition isTransitioning={isEntering} />
+      
+      <nav className="bg-wood p-4 text-cream shadow-md border-b-4 border-brown-800">
         <ul className="flex justify-center space-x-6">
           <li>
-            <Link href="/" className="text-xl hover:text-yellow-400 transition-colors">
+            <Link href="/" className="text-2xl hover:text-yellow-400 transition-colors transform hover:scale-110 inline-block">
               Home
             </Link>
           </li>
           <li>
-            <Link href="/about" className="text-xl hover:text-yellow-400 transition-colors">
+            <Link href="/about" className="text-2xl hover:text-yellow-400 transition-colors transform hover:scale-110 inline-block">
               About Us
             </Link>
           </li>
@@ -239,92 +242,179 @@ export default function Dashboard() {
 
       <div className="p-4 sm:p-6">
         <header className="text-center mb-8">
-          <h1 className="dashboard-title">TinyTalker</h1>
-          <p className="text-xl text-green-800">Your friendly language learning buddy</p>
+          <h1 className="dashboard-title text-6xl text-purple-800 drop-shadow-[2px_2px_0px_#000]">
+            TinyTalker
+          </h1>
+          <p className="text-2xl text-purple-900 font-bold">Your Magical Speaking Friend!</p>
         </header>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          <main className="flex-grow space-y-6">
-            <div className="bg-cream rounded-lg p-4 shadow-md border-2 border-brown-600">
-              <h2 className="section-title flex items-center mb-2">
-                <Wheat className="mr-2" />
-                Game Zone
-              </h2>
-              <div className="flex items-center justify-between">
-                <Link href="/games" className="button bg-green-600 text-cream hover:bg-green-700">
-                  Start Playing
-                </Link>
-                <Image
-                  src="/placeholder.svg?height=80&width=160"
-                  width={160}
-                  height={80}
-                  alt="Farm scene"
-                  className="rounded-lg border-2 border-brown-600"
-                />
-              </div>
-            </div>
-
-            <div className="bg-cream rounded-lg p-4 shadow-md border-2 border-brown-600 w-72">
-              <h2 className="section-title flex items-center mb-2">
-                <MapPin className="mr-2" />
-                TinyTown Map
-              </h2>
-              <div className="flex items-center justify-between">
-                <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/MMC_Front-yH1tPG5KNsxzz0WdL8zmo56DmTzLnJ.png"
-                  width={80}
-                  height={80}
-                  alt="TinyTown Map Character"
-                  className="pixelated object-contain"
-                />
-                <Link href="/tinytown-map" className="button bg-blue-600 text-cream hover:bg-blue-700">
-                  Explore Town
-                </Link>
-              </div>
-            </div>
-          </main>
-
-          <aside className="lg:w-1/3">
-            <div className="bg-cream rounded-lg p-6 shadow-md border-2 border-brown-600 h-full">
-              <div className="flex items-start gap-4 mb-4">
-                <h2 className="section-title flex items-center m-0">
-                  <MessageSquare className="mr-2" />
-                  AI Chat
+        <div className="flex flex-col gap-6 max-w-7xl mx-auto">
+          {/* Main Mickie Chat Section - Full Width */}
+          <div className="w-full bg-white rounded-xl p-8 shadow-[8px_8px_0px_0px_#000] border-4 border-black">
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex items-center gap-3 relative w-full justify-center">
+                <h2 className="text-4xl text-center text-purple-800 font-bold mb-4">
+                  Talk with Mickie!
                 </h2>
-                <div className="bg-[#f4e6d0] rounded-lg p-3 w-32 h-32 border-2 border-yellow-600 flex items-center justify-center">
-                  <Image
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/MMC_Front-yH1tPG5KNsxzz0WdL8zmo56DmTzLnJ.png"
-                    width={100}
-                    height={100}
-                    alt="AI Character"
-                    className={`w-full h-full object-contain pixelated transition-opacity duration-300 ${isAISpeaking ? "opacity-100" : "opacity-80"}`}
-                  />
-                </div>
+                <button
+                  onClick={() => setShowAIHelp(!showAIHelp)}
+                  className="bg-purple-100 p-2 rounded-full hover:bg-purple-200 transition-colors"
+                  aria-label="Show AI capabilities"
+                >
+                  <HelpCircle className="w-6 h-6 text-purple-800" />
+                </button>
+                
+                {/* AI Capabilities Popup */}
+                {showAIHelp && (
+                  <div className="absolute top-full mt-2 right-0 z-10 bg-white rounded-xl p-6 shadow-lg border-4 border-purple-300 w-80">
+                    <h3 className="text-xl font-bold text-purple-800 mb-3">
+                      What can Mickie do?
+                    </h3>
+                    <ul className="space-y-2 text-purple-900">
+                      <li className="flex items-start gap-2">
+                        <span>🎨</span>
+                        <span>Change page colors and appearance</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span>🎮</span>
+                        <span>Invite you to play fun games</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span>🗣️</span>
+                        <span>Chat with you using voice</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span>✨</span>
+                        <span>Show interactive demonstrations</span>
+                      </li>
+                    </ul>
+                    <button
+                      onClick={() => setShowAIHelp(false)}
+                      className="mt-4 text-sm text-purple-600 hover:text-purple-800"
+                    >
+                      Click anywhere to close
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="h-[calc(100%-12rem)]">
-                <div className="bg-green-100 rounded-lg p-4 h-full overflow-y-auto border-2 border-green-600">
-                  {/* AI chat messages will be displayed here */}
-                  <p className="text-green-800 italic">AI messages will appear here...</p>
-                </div>
+              <div className="relative w-80 h-80 bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-2xl border-4 border-black p-4 transform hover:scale-105 transition-transform">
+                <Image
+                  src="/mickey_moving/MMC_FrontUp_Anim.gif"
+                  width={280}
+                  height={280}
+                  alt="AI Character"
+                  className={`w-full h-full object-contain transition-all duration-300 ${
+                    isAISpeaking ? "animate-bounce" : ""
+                  }`}
+                />
+                {isAISpeaking && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-2 border-black animate-pulse" />
+                )}
               </div>
               <button
                 onClick={toggleAISpeaking}
                 disabled={isLoading}
-                className={`mt-4 px-4 py-2 ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' :
-                  isAISpeaking 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-purple-500 hover:bg-purple-600'
-                } text-white rounded transition-colors`}
+                className={`w-full max-w-md text-2xl py-4 px-8 rounded-xl border-4 border-black transform active:translate-y-1 transition-transform ${
+                  isLoading 
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : isAISpeaking 
+                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-[4px_4px_0px_0px_#000]' 
+                      : 'bg-green-500 hover:bg-green-600 text-white shadow-[4px_4px_0px_0px_#000]'
+                }`}
               >
-                {isLoading ? 'Connecting...' : (isAISpeaking ? 'Stop AI Voice Chat' : 'Start AI Voice Chat')}
+                {isLoading ? '🎤 Connecting...' : (isAISpeaking ? '🔴 Stop Talking' : '🎤 Start Talking!')}
               </button>
-              
-            
             </div>
-          </aside>
+          </div>
+
+          {/* Bottom Section with Map and Games */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* TinyTown Map - 2/3 Width */}
+            <div className="lg:w-2/3 bg-blue-100 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="flex flex-col h-full">
+                <h2 className="text-3xl flex items-center mb-3 text-blue-800 font-bold">
+                  <MapPin className="mr-2" size={28} />
+                  Explore TinyTown!
+                </h2>
+                <p className="text-lg text-blue-700 mb-4">
+                  Visit our magical village where every corner holds a new adventure!
+                </p>
+                
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <div className="flex-shrink-0">
+                    <Image
+                      src="/images/house.png"
+                      width={180}
+                      height={180}
+                      alt="TinyTown House"
+                      className="rounded-lg object-contain shadow-md"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col flex-grow gap-4">
+                    <div className="space-y-2">
+                      <h3 className="text-xl text-blue-900 font-semibold">
+                        🏠 Your Adventure Awaits!
+                      </h3>
+                      <ul className="text-blue-800 space-y-1">
+                        <li className="flex items-center">
+                          <span className="mr-2">🌟</span> Meet friendly townspeople
+                        </li>
+                        <li className="flex items-center">
+                          <span className="mr-2">🎨</span> Discover colorful places
+                        </li>
+                        <li className="flex items-center">
+                          <span className="mr-2">🎮</span> Play mini-games
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <Link 
+                      href="/tiny_town" 
+                      className="button bg-blue-600 text-white text-xl py-3 px-6 rounded-xl shadow-[4px_4px_0px_0px_#000] hover:transform hover:translate-y-1 transition-all text-center self-start"
+                    >
+                      🗺️ Start Exploring!
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fun Games - 1/3 Width */}
+            <div className="lg:w-1/3 bg-green-100 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <h2 className="text-3xl flex items-center mb-3 text-green-800 font-bold">
+                <Wheat className="mr-2" size={28} />
+                Fun Games
+              </h2>
+              <p className="text-lg text-green-700 mb-4">
+                Exciting new games coming soon!
+              </p>
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <Image
+                    src="/images/lock.png"
+                    width={160}
+                    height={160}
+                    alt="Coming Soon"
+                    className="rounded-lg object-contain shadow-md"
+                  />
+                </div>
+                <Link 
+                  href="/games" 
+                  className="button bg-green-600 text-white text-xl py-3 px-6 rounded-xl shadow-[4px_4px_0px_0px_#000] hover:transform hover:translate-y-1 transition-all text-center w-full"
+                >
+                  🎮 Coming Soon!
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      <Modal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        message={modalMessage}
+      />
     </div>
   )
 }

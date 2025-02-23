@@ -4,12 +4,37 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 const characters = [
-  { id: 1, name: "Lily", avatar: "/placeholder.svg?height=100&width=100" },
-  { id: 2, name: "Max", avatar: "/placeholder.svg?height=100&width=100" },
-  { id: 3, name: "Zoe", avatar: "/placeholder.svg?height=100&width=100" },
-  { id: 4, name: "Tom", avatar: "/placeholder.svg?height=100&width=100" },
+  { 
+    id: 1, 
+    name: "Mickey", 
+    avatar: "/mickey_photos/mickey.png",
+    isLocked: false,
+    isSelected: true
+  },
+  { 
+    id: 2, 
+    name: "Father", 
+    avatar: "/mickey_photos/mickey_father.png",
+    isLocked: true,
+    isSelected: false
+  },
+  { 
+    id: 3, 
+    name: "Mother", 
+    avatar: "/mickey_photos/mickey_mother.png",
+    isLocked: true,
+    isSelected: false
+  },
+  { 
+    id: 4, 
+    name: "Neighbor", 
+    avatar: "/mickey_photos/mickey_neighbor.png",
+    isLocked: true,
+    isSelected: false
+  },
 ]
 
 export default function MainMenu() {
@@ -21,7 +46,7 @@ export default function MainMenu() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-between overflow-hidden relative bg-gradient-to-b from-sky-400 via-sky-300 to-sky-200">
+    <div className="h-screen w-screen flex flex-col items-center justify-between overflow-hidden relative bg-gradient-to-b from-sky-400 via-sky-300 to-sky-200 font-bubblegum">
       {/* Full-width grass (moved to the back) */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[150px] bg-repeat-x"
@@ -51,7 +76,7 @@ export default function MainMenu() {
       {/* Content */}
       <div className="flex flex-col items-center justify-start pt-[15vh] z-20">
         <motion.h1
-          className="text-5xl sm:text-6xl lg:text-7xl font-bold text-purple-800 mb-6 text-center font-comic"
+          className="text-5xl sm:text-6xl lg:text-7xl font-bold text-purple-800 mb-6 text-center"
           initial={{ rotate: -5, scale: 0.5, opacity: 0 }}
           animate={{ rotate: 0, scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -61,7 +86,7 @@ export default function MainMenu() {
 
         <Button
           size="lg"
-          className="bg-red-500 hover:bg-red-600 text-white text-2xl sm:text-3xl py-4 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 font-comic"
+          className="bg-red-500 hover:bg-red-600 text-white text-2xl sm:text-3xl py-4 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110"
           onClick={handleStartClick}
           disabled={isWalking}
         >
@@ -69,18 +94,53 @@ export default function MainMenu() {
         </Button>
 
         <motion.div
-          className="flex justify-center mt-6"
+          className="flex justify-center mt-6 gap-4"
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           transition={{ duration: 1, type: "spring" }}
         >
           {characters.map((character) => (
-            <motion.div key={character.id} className="mx-2 sm:mx-3" whileHover={{ y: -5 }}>
-              <img
-                src={character.avatar || "/placeholder.svg"}
-                alt={character.name}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-md"
-              />
+            <motion.div 
+              key={character.id} 
+              className={`relative group ${character.isSelected ? 'scale-110' : ''}`}
+              whileHover={{ y: -5 }}
+            >
+              <div className="relative">
+                <div className={`
+                  rounded-full border-4 
+                  ${character.isSelected ? 'border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'border-white'} 
+                  overflow-hidden relative
+                `}>
+                  <Image
+                    src={character.avatar}
+                    alt={character.name}
+                    width={80}
+                    height={80}
+                    className={`transition-transform group-hover:scale-110 ${character.isLocked ? 'opacity-50' : ''}`}
+                  />
+                  {character.isLocked && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <Image
+                        src="/images/lock.png"
+                        alt="Locked"
+                        width={30}
+                        height={30}
+                        className="opacity-90"
+                      />
+                    </div>
+                  )}
+                </div>
+                {character.isSelected && (
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
+                    <div className="w-3 h-3 bg-yellow-400 rotate-45 shadow-lg" />
+                  </div>
+                )}
+              </div>
+              <p className={`text-center mt-2 font-bold transition-opacity
+                ${character.isSelected ? 'text-yellow-500' : 'text-purple-800'} 
+                ${character.isLocked ? 'opacity-50' : 'opacity-0 group-hover:opacity-100'}`}>
+                {character.name}
+              </p>
             </motion.div>
           ))}
         </motion.div>

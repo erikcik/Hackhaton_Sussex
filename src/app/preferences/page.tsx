@@ -5,8 +5,11 @@ import { UserPreferences, PreferenceStep } from '@/types/preferences';
 import { motion } from 'framer-motion';
 import { checkUserPreferences, saveUserPreferences } from '../actions';
 import { VALID_GENDERS } from '@/db/schema';
+import { useRouter } from 'next/navigation';
+import CloudTransition from '@/components/CloudTransition';
 
 const PreferencesPage = () => {
+  const router = useRouter();
   const [step, setStep] = useState<PreferenceStep>('name');
   const [preferences, setPreferences] = useState<UserPreferences>({
     firstName: '',
@@ -16,6 +19,7 @@ const PreferencesPage = () => {
     preferredLanguage: '',
     age: 0
   });
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     // Check for existing preferences
@@ -36,6 +40,10 @@ const PreferencesPage = () => {
       
       if (result.success) {
         setStep('complete');
+        setIsTransitioning(true);
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
       } else {
         console.error('Error saving preferences:', result.error);
       }
@@ -186,10 +194,13 @@ const PreferencesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-100 to-blue-100 p-8">
-      <div className="max-w-2xl mx-auto">
-        {renderStep()}
+    <div className="relative">
+      <div className="min-h-screen bg-gradient-to-b from-pink-100 to-blue-100 p-8">
+        <div className="max-w-2xl mx-auto">
+          {renderStep()}
+        </div>
       </div>
+      <CloudTransition isTransitioning={isTransitioning} />
     </div>
   );
 };
