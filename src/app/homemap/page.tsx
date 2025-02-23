@@ -5,6 +5,9 @@ import Mother from '../components/Mother';
 import Father from '../components/Father';
 import Neighbour from '../components/Neighbour';
 import Flowers from '../components/Flowers';
+import CharPopup from '@/components/char-popup/char-popup';
+import { characters } from '@/data/characters';
+import { Character } from '@/types/character-types';
 
 export default function HomeMap() {
   const [position, setPosition] = useState({ x: 320, y: 350 });
@@ -12,6 +15,15 @@ export default function HomeMap() {
   const [direction, setDirection] = useState('front');
   const [currentFloor, setCurrentFloor] = useState('down');
   const [showInteraction, setShowInteraction] = useState(false);
+  const [showCharPopup, setShowCharPopup] = useState(false);
+  const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null);
+  const [completedCharacters, setCompletedCharacters] = useState<string[]>([]);
+  const [characterStates, setCharacterStates] = useState<{[key: string]: Character}>({
+    brother: characters.brother,
+    mother: characters.mother,
+    father: characters.father,
+    neighbour: characters.neighbour
+  });
   
   const moveSpeed = 5;
   const boundaryWidth = 800;
@@ -264,116 +276,173 @@ export default function HomeMap() {
       height: 150,
     };
 
-    // Check collision with exclamation marks based on current floor
     if (currentFloor === 'down') {
-      if (
-        (mickeyBox.x < motherExclamationBox.x + motherExclamationBox.width &&
-        mickeyBox.x + mickeyBox.width > motherExclamationBox.x &&
-        mickeyBox.y < motherExclamationBox.y + motherExclamationBox.height &&
-        mickeyBox.y + mickeyBox.height > motherExclamationBox.y) ||
-        (mickeyBox.x < neighbourExclamationBox.x + neighbourExclamationBox.width &&
-        mickeyBox.x + mickeyBox.width > neighbourExclamationBox.x &&
-        mickeyBox.y < neighbourExclamationBox.y + neighbourExclamationBox.height &&
-        mickeyBox.y + mickeyBox.height > neighbourExclamationBox.y)
-      ) {
+      // Check mother interaction
+      if (checkCollision(mickeyBox, motherExclamationBox)) {
         setShowInteraction(true);
-      } else {
+        setCurrentCharacter(characterStates.mother);
+      }
+      // Check neighbour interaction
+      else if (checkCollision(mickeyBox, neighbourExclamationBox)) {
+        setShowInteraction(true);
+        setCurrentCharacter(characterStates.neighbour);
+      }
+      else {
         setShowInteraction(false);
+        setCurrentCharacter(null);
+        // Also close the popup if we're out of range
+        setShowCharPopup(false);
       }
     } else {
-      // Check both father and brother on upper floor
-      if (
-        (mickeyBox.x < fatherExclamationBox.x + fatherExclamationBox.width &&
-        mickeyBox.x + mickeyBox.width > fatherExclamationBox.x &&
-        mickeyBox.y < fatherExclamationBox.y + fatherExclamationBox.height &&
-        mickeyBox.y + mickeyBox.height > fatherExclamationBox.y) ||
-        (mickeyBox.x < brotherExclamationBox.x + brotherExclamationBox.width &&
-        mickeyBox.x + mickeyBox.width > brotherExclamationBox.x &&
-        mickeyBox.y < brotherExclamationBox.y + brotherExclamationBox.height &&
-        mickeyBox.y + mickeyBox.height > brotherExclamationBox.y)
-      ) {
+      // Check father interaction
+      if (checkCollision(mickeyBox, fatherExclamationBox)) {
         setShowInteraction(true);
-      } else {
-        setShowInteraction(false);
+        setCurrentCharacter(characterStates.father);
       }
+      // Check brother interaction
+      else if (checkCollision(mickeyBox, brotherExclamationBox)) {
+        setShowInteraction(true);
+        setCurrentCharacter(characterStates.brother);
+      }
+      else {
+        setShowInteraction(false);
+        setCurrentCharacter(null);
+        // Also close the popup if we're out of range
+        setShowCharPopup(false);
+      }
+    }
+  };
+
+  // Helper function to check collision
+  const checkCollision = (box1: any, box2: any) => {
+    return (
+      box1.x < box2.x + box2.width &&
+      box1.x + box1.width > box2.x &&
+      box1.y < box2.y + box2.height &&
+      box1.y + box1.height > box2.y
+    );
+  };
+
+  // Update the question completion handler
+  const handleQuestionComplete = (characterId: string, questionIndex: number, completed?: boolean) => {
+    // Update character's current question index
+    setCharacterStates(prev => ({
+        ...prev,
+        [characterId]: {
+            ...prev[characterId],
+            currentQuestionIndex: questionIndex + 1
+        }
+    }));
+
+    // If character completed all questions, add to completed list
+    if (completed) {
+        setCompletedCharacters(prev => {
+            if (!prev.includes(characterId)) {
+                return [...prev, characterId];
+            }
+            return prev;
+        });
+        // Also close the popup after a delay
+        setTimeout(() => {
+            setShowCharPopup(false);
+        }, 2000);
     }
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      setKeysPressed((prev) => ({ ...prev, [key]: true }));
-      
-      switch (key) {
-        case 'w':
-          setDirection('back');
-          // Check for stair teleportation when pressing up
-          if (isOnStairs(position) && currentFloor === 'down') {
-            handleTeleport();
-          }
-          break;
-        case 's':
-          setDirection('front');
-          // Check for stair teleportation when pressing down
-          if (isOnStairs(position) && currentFloor === 'up') {
-            handleTeleport();
-          }
-          break;
-        case 'a':
-          setDirection('left');
-          break;
-        case 'd':
-          setDirection('right');
-          break;
-      }
+        const key = e.key.toLowerCase();
+        
+        // If CharPopup is open, only handle T key and prevent movement
+        if (showCharPopup) {
+            // Optionally handle Escape key to close popup
+            if (key === 'escape') {
+                setShowCharPopup(false);
+            }
+            return; // Don't process any other keys when popup is open
+        }
+
+        setKeysPressed((prev) => ({ ...prev, [key]: true }));
+        
+        // Only trigger popup if we're in range of an NPC and T is pressed
+        if (key === 't' && showInteraction && currentCharacter) {
+            setShowCharPopup(true);
+            // Clear all pressed keys to prevent movement when popup opens
+            setKeysPressed({});
+            return;
+        }
+        
+        switch (key) {
+            case 'w':
+                setDirection('back');
+                if (isOnStairs(position) && currentFloor === 'down') {
+                    handleTeleport();
+                }
+                break;
+            case 's':
+                setDirection('front');
+                if (isOnStairs(position) && currentFloor === 'up') {
+                    handleTeleport();
+                }
+                break;
+            case 'a':
+                setDirection('left');
+                break;
+            case 'd':
+                setDirection('right');
+                break;
+        }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      setKeysPressed((prev) => ({ ...prev, [e.key.toLowerCase()]: false }));
+        // If CharPopup is open, don't process movement keys
+        if (showCharPopup) return;
+        
+        setKeysPressed((prev) => ({ ...prev, [e.key.toLowerCase()]: false }));
     };
 
     const moveCharacter = (timestamp: number) => {
-      if (timestamp - lastFrameTime < frameRate) {
-        return;
-      }
-      lastFrameTime = timestamp;
+        // If CharPopup is open, don't move character
+        if (showCharPopup) return;
 
-      setPosition((prev) => {
-        let newX = prev.x;
-        let newY = prev.y;
-
-        if (keysPressed['w']) {
-          newY = Math.max(0, prev.y - moveSpeed);
-          // Check stairs when moving up, regardless of other keys
-          if (isOnStairs(prev) && currentFloor === 'down') {
-            handleTeleport();
-          }
+        if (timestamp - lastFrameTime < frameRate) {
+            return;
         }
-        if (keysPressed['s']) {
-          newY = Math.min(boundaryHeight - characterSize, prev.y + moveSpeed);
-          // Check stairs when moving down, regardless of other keys
-          if (isOnStairs(prev) && currentFloor === 'up') {
-            handleTeleport();
-          }
-        }
-        if (keysPressed['a']) newX = Math.max(0, prev.x - moveSpeed);
-        if (keysPressed['d']) newX = Math.min(boundaryWidth - characterSize, prev.x + moveSpeed);
+        lastFrameTime = timestamp;
 
-        // Check collision with both wall and bed
-        if (wouldCollideWithFurniture(newX, newY)) {
-          return prev; // Don't move if would collide
-        }
+        setPosition((prev) => {
+            let newX = prev.x;
+            let newY = prev.y;
 
-        return { x: newX, y: newY };
-      });
+            if (keysPressed['w']) {
+                newY = Math.max(0, prev.y - moveSpeed);
+                if (isOnStairs(prev) && currentFloor === 'down') {
+                    handleTeleport();
+                }
+            }
+            if (keysPressed['s']) {
+                newY = Math.min(boundaryHeight - characterSize, prev.y + moveSpeed);
+                if (isOnStairs(prev) && currentFloor === 'up') {
+                    handleTeleport();
+                }
+            }
+            if (keysPressed['a']) newX = Math.max(0, prev.x - moveSpeed);
+            if (keysPressed['d']) newX = Math.min(boundaryWidth - characterSize, prev.x + moveSpeed);
 
-      checkInteraction();
+            if (wouldCollideWithFurniture(newX, newY)) {
+                return prev;
+            }
+
+            return { x: newX, y: newY };
+        });
+
+        checkInteraction();
     };
 
     let animationFrameId: number;
     const animate = (timestamp: number) => {
-      moveCharacter(timestamp);
-      animationFrameId = requestAnimationFrame(animate);
+        moveCharacter(timestamp);
+        animationFrameId = requestAnimationFrame(animate);
     };
     animationFrameId = requestAnimationFrame(animate);
 
@@ -381,11 +450,11 @@ export default function HomeMap() {
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        cancelAnimationFrame(animationFrameId);
     };
-  }, [keysPressed, position, currentFloor]);
+}, [keysPressed, position, currentFloor, showInteraction, currentCharacter, showCharPopup]); // Add showCharPopup to dependencies
 
   const getCharacterGif = () => {
     switch (direction) {
@@ -514,10 +583,22 @@ export default function HomeMap() {
             </div>
           )}
 
-          <Brother currentFloor={currentFloor} />
-          <Mother currentFloor={currentFloor} />
-          <Father currentFloor={currentFloor} />
-          <Neighbour currentFloor={currentFloor} />
+          <Brother 
+            currentFloor={currentFloor} 
+            isCompleted={completedCharacters.includes('brother')} 
+          />
+          <Mother 
+            currentFloor={currentFloor} 
+            isCompleted={completedCharacters.includes('mother')} 
+          />
+          <Father 
+            currentFloor={currentFloor} 
+            isCompleted={completedCharacters.includes('father')} 
+          />
+          <Neighbour 
+            currentFloor={currentFloor} 
+            isCompleted={completedCharacters.includes('neighbour')} 
+          />
 
           {/* Debug: Mickey's Collision Box */}
           <div
@@ -591,6 +672,13 @@ export default function HomeMap() {
           `}</style>
         </div>
       </div>
+      {showCharPopup && currentCharacter && (
+        <CharPopup
+          character={characterStates[currentCharacter.id]}
+          onClose={() => setShowCharPopup(false)}
+          onQuestionComplete={handleQuestionComplete}
+        />
+      )}
     </div>
   );
 }
