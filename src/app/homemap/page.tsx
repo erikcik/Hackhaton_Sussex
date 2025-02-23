@@ -1,11 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Brother from '../components/Brother';
+import Mother from '../components/Mother';
+import Father from '../components/Father';
+import Neighbour from '../components/Neighbour';
+import Flowers from '../components/Flowers';
 
 export default function HomeMap() {
-  const [position, setPosition] = useState({ x: 100, y: 100 });
+  const [position, setPosition] = useState({ x: 320, y: 350 });
   const [keysPressed, setKeysPressed] = useState<{ [key: string]: boolean }>({});
   const [direction, setDirection] = useState('front');
   const [currentFloor, setCurrentFloor] = useState('down');
+  const [showInteraction, setShowInteraction] = useState(false);
   
   const moveSpeed = 5;
   const boundaryWidth = 800;
@@ -15,18 +21,18 @@ export default function HomeMap() {
   const frameRate = 1000 / 30;
   let lastFrameTime = 0;
 
-  // Define stair areas for both floors with more accurate positions
+  // Define stair areas for both floors
   const stairs = {
     down: {
-      x: 320,    // Keep same x position
-      y: 300,    // Moved to middle section (was 100)
-      width: 150, // Keep same width
-      height: 50  // Reduced height for more precise trigger area
+      x: 290,    // Move slightly more right (was 285)
+      y: 300,    // Keep same height
+      width: 200, // Keep same width
+      height: 50  // Keep same height
     },
     up: {
-      x: 320,    // Keep same x position
-      y: 700,    // Keep same for upper floor
-      width: 150, // Keep same width
+      x: 290,    // Keep consistent with down stairs
+      y: 700,    // Keep same position
+      width: 200, // Keep same width
       height: 50  // Keep same height
     }
   };
@@ -45,6 +51,17 @@ export default function HomeMap() {
       x: 470,    // Start after stairs (stairs.down.x + stairs.down.width)
       y: 0,
       width: 330, // Rest of the wall to right edge
+      height: 350
+    }
+  ];
+
+  // Update wall areas for the upper floor to fill the gap
+  const upperWallAreas = [
+    {
+      // Left wall section
+      x: 0,
+      y: 0,
+      width: 800, // Full width to cover the gap
       height: 350
     }
   ];
@@ -81,6 +98,22 @@ export default function HomeMap() {
     height: 150 // Increase height from 100 to 150 to extend lower
   };
 
+  // Update stand collision area with flipped dimensions
+  const standArea = {
+    x: 700,     // Adjust x position if needed
+    y: 150,     // Adjust y position to fit the new height
+    width: 100, // Original height becomes width
+    height: 350 // Original width becomes height
+  };
+
+  // Update neighbour's exclamation box position
+  const neighbourExclamationBox = {
+    x: 665,
+    y: 580, // Update to match new position
+    width: 120,
+    height: 150,
+  };
+
   // Update collision box to be at Mickey's feet
   const getCollisionBox = (pos: { x: number, y: number }) => {
     const footHeight = 10;   // Reduced from 40 to 10
@@ -111,13 +144,23 @@ export default function HomeMap() {
   const wouldCollideWithWall = (newX: number, newY: number) => {
     const collisionBox = getCollisionBox({ x: newX, y: newY });
     
-    // Check collision with both wall sections
-    return wallAreas.some(wall => (
-      collisionBox.x < wall.x + wall.width &&
-      collisionBox.x + collisionBox.width > wall.x &&
-      collisionBox.y < wall.y + wall.height &&
-      collisionBox.y + collisionBox.height > wall.y
-    ));
+    if (currentFloor === 'down') {
+      // Check collision with lower floor wall sections
+      return wallAreas.some(wall => (
+        collisionBox.x < wall.x + wall.width &&
+        collisionBox.x + collisionBox.width > wall.x &&
+        collisionBox.y < wall.y + wall.height &&
+        collisionBox.y + collisionBox.height > wall.y
+      ));
+    } else {
+      // Check collision with upper floor wall
+      return upperWallAreas.some(wall => (
+        collisionBox.x < wall.x + wall.width &&
+        collisionBox.x + collisionBox.width > wall.x &&
+        collisionBox.y < wall.y + wall.height &&
+        collisionBox.y + collisionBox.height > wall.y
+      ));
+    }
   };
 
   // Update stairs collision detection
@@ -151,7 +194,7 @@ export default function HomeMap() {
     const wallCollision = wouldCollideWithWall(newX, newY);
     
     if (currentFloor === 'down') {
-        // Add TV and sofa collision checks
+        // Add TV, sofa, and stand collision checks
         const tvCollision = (
             collisionBox.x < tvArea.x + tvArea.width &&
             collisionBox.x + collisionBox.width > tvArea.x &&
@@ -165,8 +208,15 @@ export default function HomeMap() {
             collisionBox.y < sofaArea.y + sofaArea.height &&
             collisionBox.y + collisionBox.height > sofaArea.y
         );
+
+        const standCollision = (
+            collisionBox.x < standArea.x + standArea.width &&
+            collisionBox.x + collisionBox.width > standArea.x &&
+            collisionBox.y < standArea.y + standArea.height &&
+            collisionBox.y + collisionBox.height > standArea.y
+        );
         
-        return wallCollision || tvCollision || sofaCollision;
+        return wallCollision || tvCollision || sofaCollision || standCollision;
     } else {
         // Upper floor collisions (bed and bath)
         const bedCollision = (
@@ -184,6 +234,68 @@ export default function HomeMap() {
         );
         
         return wallCollision || bedCollision || bathCollision;
+    }
+  };
+
+  const checkInteraction = () => {
+    const mickeyBox = getCollisionBox(position);
+    
+    // Mother's exclamation box (downstairs)
+    const motherExclamationBox = {
+      x: 535,
+      y: 280,
+      width: 120,
+      height: 150,
+    };
+
+    // Father's exclamation box (upstairs)
+    const fatherExclamationBox = {
+      x: 165,
+      y: 500,
+      width: 120,
+      height: 150,
+    };
+
+    // Brother's exclamation box (upstairs)
+    const brotherExclamationBox = {
+      x: 615,
+      y: 500,
+      width: 120,
+      height: 150,
+    };
+
+    // Check collision with exclamation marks based on current floor
+    if (currentFloor === 'down') {
+      if (
+        (mickeyBox.x < motherExclamationBox.x + motherExclamationBox.width &&
+        mickeyBox.x + mickeyBox.width > motherExclamationBox.x &&
+        mickeyBox.y < motherExclamationBox.y + motherExclamationBox.height &&
+        mickeyBox.y + mickeyBox.height > motherExclamationBox.y) ||
+        (mickeyBox.x < neighbourExclamationBox.x + neighbourExclamationBox.width &&
+        mickeyBox.x + mickeyBox.width > neighbourExclamationBox.x &&
+        mickeyBox.y < neighbourExclamationBox.y + neighbourExclamationBox.height &&
+        mickeyBox.y + mickeyBox.height > neighbourExclamationBox.y)
+      ) {
+        setShowInteraction(true);
+      } else {
+        setShowInteraction(false);
+      }
+    } else {
+      // Check both father and brother on upper floor
+      if (
+        (mickeyBox.x < fatherExclamationBox.x + fatherExclamationBox.width &&
+        mickeyBox.x + mickeyBox.width > fatherExclamationBox.x &&
+        mickeyBox.y < fatherExclamationBox.y + fatherExclamationBox.height &&
+        mickeyBox.y + mickeyBox.height > fatherExclamationBox.y) ||
+        (mickeyBox.x < brotherExclamationBox.x + brotherExclamationBox.width &&
+        mickeyBox.x + mickeyBox.width > brotherExclamationBox.x &&
+        mickeyBox.y < brotherExclamationBox.y + brotherExclamationBox.height &&
+        mickeyBox.y + mickeyBox.height > brotherExclamationBox.y)
+      ) {
+        setShowInteraction(true);
+      } else {
+        setShowInteraction(false);
+      }
     }
   };
 
@@ -230,8 +342,20 @@ export default function HomeMap() {
         let newX = prev.x;
         let newY = prev.y;
 
-        if (keysPressed['w']) newY = Math.max(0, prev.y - moveSpeed);
-        if (keysPressed['s']) newY = Math.min(boundaryHeight - characterSize, prev.y + moveSpeed);
+        if (keysPressed['w']) {
+          newY = Math.max(0, prev.y - moveSpeed);
+          // Check stairs when moving up, regardless of other keys
+          if (isOnStairs(prev) && currentFloor === 'down') {
+            handleTeleport();
+          }
+        }
+        if (keysPressed['s']) {
+          newY = Math.min(boundaryHeight - characterSize, prev.y + moveSpeed);
+          // Check stairs when moving down, regardless of other keys
+          if (isOnStairs(prev) && currentFloor === 'up') {
+            handleTeleport();
+          }
+        }
         if (keysPressed['a']) newX = Math.max(0, prev.x - moveSpeed);
         if (keysPressed['d']) newX = Math.min(boundaryWidth - characterSize, prev.x + moveSpeed);
 
@@ -242,6 +366,8 @@ export default function HomeMap() {
 
         return { x: newX, y: newY };
       });
+
+      checkInteraction();
     };
 
     let animationFrameId: number;
@@ -277,38 +403,192 @@ export default function HomeMap() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div 
+      className="min-h-screen w-screen flex items-center justify-center"
+      style={{
+        backgroundImage: `url('/mickey_moving/Untitled design.png')`,
+        backgroundRepeat: 'repeat',
+        imageRendering: 'pixelated',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden', // Prevent background from causing scrollbars
+      }}
+    >
       <div 
-        className="relative border-4 border-black"
-        style={{ 
-          width: `${boundaryWidth}px`, 
-          height: `${boundaryHeight}px`,
-          backgroundImage: `url("/mickey_moving/House_${currentFloor === 'down' ? 'Down' : 'Up'}%20(1).png")`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+        className="relative"
+        style={{
+          width: '800px',
+          height: '800px',
+          position: 'relative',
+          margin: 'auto',
+          zIndex: 10, // Ensure game container is above background
         }}
       >
-        <div
-          className="absolute"
-          style={{
-            left: `${position.x}px`,
-            top: `${position.y}px`,
-            width: `${characterSize}px`,  // Keep visual size large
-            height: `${characterSize}px`,
+        <div 
+          className="relative border-4 border-black"
+          style={{ 
+            width: `${boundaryWidth}px`, 
+            height: `${boundaryHeight}px`,
+            backgroundImage: `url("/mickey_moving/House_${currentFloor === 'down' ? 'Down' : 'Up'}%20(1).png")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative',
             zIndex: 10,
           }}
         >
-          <img 
-            src={getCharacterGif()}
-            alt="Mickey Mouse"
-            width={characterSize}
-            height={characterSize}
-            style={{ 
-              imageRendering: 'pixelated',
-              width: '100%',
-              height: '100%',
+          <div
+            className="absolute"
+            style={{
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              width: `${characterSize}px`,
+              height: `${characterSize}px`,
+              zIndex: 10,
+            }}
+          >
+            <img 
+              src={getCharacterGif()}
+              alt="Mickey Mouse"
+              width={characterSize}
+              height={characterSize}
+              style={{ 
+                imageRendering: 'pixelated',
+                width: '100%',
+                height: '100%',
+              }}
+            />
+          </div>
+
+          {/* Interaction Message */}
+          {showInteraction && (
+            <div
+              className="absolute"
+              style={{
+                left: `${position.x + characterSize / 2 - 50}px`,
+                top: `${position.y - 60}px`,
+                zIndex: 11,
+                position: 'relative',
+                display: 'inline-block',
+                padding: '12px 16px',
+                outline: 'none',
+                boxShadow: 'none',
+              }}
+            >
+              {/* Blurred Background */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'white',
+                  filter: 'blur(7px)',
+                  zIndex: 10,
+                }}
+              />
+              <div
+                className="relative p-2 inline-block"
+                style={{
+                  zIndex: 11,
+                  fontSize: '20px',
+                }}
+              >
+                Click&nbsp;&nbsp;&nbsp;<span
+                  style={{
+                    animation: 'breathe 2s infinite ease-in-out',
+                    display: 'inline-block',
+                    textShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
+                    color: '#000',
+                    backgroundColor: '#f0f0f0',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    boxShadow: '0 2px 0 #ccc',
+                    fontFamily: 'monospace',
+                  }}
+                >T</span>
+              </div>
+            </div>
+          )}
+
+          <Brother currentFloor={currentFloor} />
+          <Mother currentFloor={currentFloor} />
+          <Father currentFloor={currentFloor} />
+          <Neighbour currentFloor={currentFloor} />
+
+          {/* Debug: Mickey's Collision Box */}
+          <div
+            className="absolute opacity-50"
+            style={{
+              left: `${position.x + (characterSize - collisionSize) / 2}px`,
+              top: `${position.y + (characterSize - collisionSize)}px`,
+              width: `${collisionSize}px`,
+              height: `${collisionSize}px`,
+              zIndex: 5,
+              border: '1px solid transparent'
             }}
           />
+
+          {/* Debug: Stand Collision Box */}
+          {currentFloor === 'down' && (
+            <div
+              className="absolute opacity-50"
+              style={{
+                left: `${standArea.x}px`,
+                top: `${standArea.y}px`,
+                width: `${standArea.width}px`,
+                height: `${standArea.height}px`,
+                zIndex: 5,
+                border: '1px solid transparent'
+              }}
+            />
+          )}
+
+          {/* Debug: Stairs Collision Box (both floors) */}
+          {currentFloor === 'down' ? (
+            <div
+              className="absolute opacity-50"
+              style={{
+                left: `${stairs.down.x}px`,
+                top: `${stairs.down.y}px`,
+                width: `${stairs.down.width}px`,
+                height: `${stairs.down.height}px`,
+                zIndex: 5,
+              }}
+            />
+          ) : (
+            <div
+              className="absolute opacity-50"
+              style={{
+                left: `${stairs.up.x}px`,
+                top: `${stairs.up.y}px`,
+                width: `${stairs.up.width}px`,
+                height: `${stairs.up.height}px`,
+                zIndex: 5,
+              }}
+            />
+          )}
+
+          {/* Add the animation keyframes to your CSS */}
+          <style jsx>{`
+            @keyframes breathe {
+              0% {
+                transform: scale(1);
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.8)';
+              }
+              50% {
+                transform: scale(1.2);
+                textShadow: '0 0 20px rgba(255, 255, 255, 1)';
+              }
+              100% {
+                transform: scale(1);
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.8)';
+              }
+            }
+          `}</style>
         </div>
       </div>
     </div>
