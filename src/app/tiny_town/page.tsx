@@ -52,11 +52,11 @@ export default function PixelMap() {
       </div>
 
       <div className="relative h-full flex items-center justify-center z-1">
-        <div className="relative h-full aspect-[9/16]">
+        <div className="relative h-[178vh] aspect-square">
           {/* Main image */}
           <div className="relative h-full">
             <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tiny_town-Sl029WOUQszAnoMWW3WxHCMDNlCJFv.png"
+              src="/images/Map.png"
               alt="Pixel art town map"
               fill
               className={`object-contain transition-all ${isExpanding ? 'opacity-0' : ''}`}
@@ -70,7 +70,7 @@ export default function PixelMap() {
             <div className="absolute inset-0">
               {/* House */}
               <button 
-                className={`absolute left-[42.9%] top-[78.5%] w-[15%] h-[15%] 
+                className={`absolute left-[47.5%] top-[66%] w-[5%] h-[5%] 
                            hover:scale-125 hover:cursor-pointer
                            focus:outline-none
                            ${isExpanding ? 'opacity-0' : ''}`}
@@ -84,8 +84,8 @@ export default function PixelMap() {
                   <Image
                     src="/images/house.png"
                     alt="House icon"
-                    width={32}
-                    height={32}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-contain"
                     style={{ imageRendering: "pixelated" }}
                     priority
@@ -95,7 +95,7 @@ export default function PixelMap() {
               
               {/* School */}
               <button 
-                className={`absolute left-[28.5%] top-[14.5%] w-[15%] h-[15%] 
+                className={`absolute left-[43.3%] top-[33%] w-[5%] h-[5%] 
                            hover:scale-125 hover:cursor-pointer
                            focus:outline-none
                            ${isExpanding ? 'opacity-0' : ''}`}
@@ -108,8 +108,8 @@ export default function PixelMap() {
                   <Image
                     src="/images/school.png"
                     alt="School icon"
-                    width={32}
-                    height={32}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-contain"
                     style={{ imageRendering: "pixelated" }}
                     priority
@@ -119,7 +119,7 @@ export default function PixelMap() {
               
               {/* Lock */}
               <button 
-                className={`absolute right-[43%] top-[38%] w-[15%] h-[15%] 
+                className={`absolute right-[47.6%] top-[45.2%] w-[5%] h-[5%] 
                            hover:scale-125 hover:cursor-pointer
                            focus:outline-none
                            ${isExpanding ? 'opacity-0' : ''}`}
@@ -132,8 +132,8 @@ export default function PixelMap() {
                   <Image
                     src="/images/lock.png"
                     alt="Lock icon"
-                    width={32}
-                    height={32}
+                    width={48}
+                    height={48}
                     className="w-full h-full object-contain"
                     style={{ imageRendering: "pixelated" }}
                     priority
