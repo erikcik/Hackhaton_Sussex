@@ -1,6 +1,7 @@
 import { Image, StyleSheet, Platform, Dimensions, Pressable, Animated } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
-import { router } from 'expo-router';
+import { router, Link } from 'expo-router';
+import { TouchableOpacity, Text } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -138,6 +139,13 @@ export default function HomeScreen() {
 
       {/* Grass */}
       <ThemedView style={styles.grass} />
+
+      {/* Navigation Button */}
+      <Link href="/(tabs)/page" asChild>
+        <TouchableOpacity style={styles.homeMapButton}>
+          <Text style={styles.homeMapButtonText}>Go to Home Map</Text>
+        </TouchableOpacity>
+      </Link>
     </ThemedView>
   );
 }
@@ -250,5 +258,35 @@ const styles = StyleSheet.create({
     right: 0,
     height: '20%',
     backgroundColor: '#90EE90',
+  },
+  homeMapButton: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: '#FF4081',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    elevation: 8,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    borderWidth: 2,
+    borderColor: '#FFF',
+    transform: [{ scale: 1.1 }],
+  },
+  homeMapButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
