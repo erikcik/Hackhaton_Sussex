@@ -36,6 +36,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "fonts": [
+      {
+        "family": "BubblegumSans",
+        "src": "./assets/fonts/BubblegumSans-Regular.ttf"
+      }
+    ]
   }
 }
