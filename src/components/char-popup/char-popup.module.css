@@ -60,13 +60,13 @@
     }
     100% { 
         transform: scale(1);
-        left: calc(185px); /* 15px initial margin + approximate width of small popup + 20px gap */
+        left: calc(185px);
         opacity: 1;
     }
 }
 
 .animatePopupFromLeft {
-    animation: popupFromLeft 0.8s ease-in-out forwards;
+    animation: popupFromLeft 1.5s cubic-bezier(0.45, 0, 0.55, 1) forwards;
     position: relative;
 }
 
@@ -117,13 +117,13 @@
 }
 
 @keyframes popupFadeOut {
-    0% {
-        opacity: 1;
+    0% { 
         transform: scale(1);
+        opacity: 1;
     }
-    100% {
-        opacity: 0;
+    100% { 
         transform: scale(0.95);
+        opacity: 0;
     }
 }
 

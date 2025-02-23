@@ -46,16 +46,30 @@ export default function MainMenu() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-between overflow-hidden relative">
-      {/* Add Map background image */}
-      <div 
-        className="absolute inset-0 w-full h-full"
+    <div className="h-screen w-screen flex flex-col items-center justify-between overflow-hidden relative bg-gradient-to-b from-sky-400 via-sky-300 to-sky-200 font-bubblegum">
+      {/* Full-width grass (moved to the back) */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[150px] bg-repeat-x"
         style={{
-          backgroundImage: `url('/images/Map.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          zIndex: 0
+          backgroundImage: `url(https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-4J10EwLFsP5VcJMV5YzebjEivFvPBG.png)`,
+          backgroundSize: "auto 100%",
+          filter: "hue-rotate(-10deg) saturate(80%) brightness(110%)",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Sun */}
+      <motion.img
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sun-5MVQLy7uTC1M1cevjol7QipWjwratJ.png"
+        alt="Pixel art sun"
+        className="absolute right-[5vw] top-[5vh] w-[25vmin] h-[25vmin] z-10"
+        animate={{
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
         }}
       />
 
@@ -133,7 +147,7 @@ export default function MainMenu() {
       </div>
 
       {/* House and Garden */}
-      <div className="w-full h-[55vh] relative z-20">
+      <div className="w-full h-[55vh] relative" style={{ zIndex: 2 }}>
         <svg className="w-full h-full" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMax meet">
           {/* Pixel Art Flowers */}
           {[
@@ -171,8 +185,8 @@ export default function MainMenu() {
           <image
             href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image_transparent_Craiyon-NuWMjqB7nchW3rQHupD1YZ9Vo5RaWz.png"
             x="5%"
-            y="100"
-            width="20%"
+            y="120"
+            width="29%"
             height="200"
             preserveAspectRatio="xMidYMid meet"
             style={{ mixBlendMode: "multiply" }}
@@ -181,8 +195,8 @@ export default function MainMenu() {
           {/* Right Tree */}
           <image
             href="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tree2-mKW9Un8u06Im7jsCP2ZrpkzeMITqEG.png"
-            x="75%"
-            y="50"
+            x="70%"
+            y="140"
             width="20%"
             height="250"
             preserveAspectRatio="xMidYMid meet"
@@ -238,4 +252,3 @@ export default function MainMenu() {
     </div>
   )
 }
-

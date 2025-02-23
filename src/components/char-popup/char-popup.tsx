@@ -23,7 +23,7 @@ export default function CharPopup() {
     const [currentCharIndex, setCurrentCharIndex] = useState(0);
     const [userQuestion, setUserQuestion] = useState("");
     const [isMicrophoneExpanded, setIsMicrophoneExpanded] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
 
     const questions: Question[] = [
         {
@@ -85,10 +85,9 @@ export default function CharPopup() {
                 // Last question completed
                 setMickeyResponse("Well done! You completed this level!");
                 setTimeout(() => {
-                    setIsClosing(true);  // Start fade out animation
+                    setIsCompleted(true);  // Start fade out animation
                     setTimeout(() => {
                         setIsOpen(false);  // Close popup after animation
-                        setIsClosing(false);  // Reset state
                     }, 1000);
                 }, 2000);
             } else {
@@ -106,11 +105,9 @@ export default function CharPopup() {
                 setTimeout(() => {
                     setHeartCount(prev => {
                         const newHeartCount = prev - 1;
-                        // Show second popup when hearts reach 0
                         if (newHeartCount === 0) {
-                            setTimeout(() => {
-                                setShowSecondPopup(true);
-                            }, 500);
+                            // Show second popup immediately when shrink starts
+                            setShowSecondPopup(true);
                         }
                         return newHeartCount;
                     });
@@ -202,15 +199,16 @@ export default function CharPopup() {
 
             {isOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-[1001]">
-                    <div 
-                        className="absolute inset-0 bg-black/50"
-                        onClick={() => setIsOpen(false)}
-                    />
+                    <div className={`absolute inset-0 bg-black/50 transition-opacity duration-1000 ${
+                        isCompleted ? 'opacity-0' : 'opacity-100'
+                    }`} onClick={() => setIsOpen(false)} />
                     
                     <div className={`relative w-[70%] h-[70%] bg-white rounded-lg shadow-xl ${
                         styles.animatePopup
                     } ${
-                        isClosing ? styles.animatePopupFadeOut : ''
+                        heartCount === 0 ? styles.animatePopupShrink : ''
+                    } ${
+                        isCompleted ? styles.animatePopupFadeOut : ''
                     }`}>
                         <Button
                             variant="ghost"
@@ -237,20 +235,23 @@ export default function CharPopup() {
                             <div className="text-2xl font-bold mt-4 text-center">
                                 {mickeyResponse || questions[currentQuestionIndex].text}
                             </div>
-                            <form onSubmit={handleAnswerSubmit} className="mt-6 w-full max-w-md">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={currentAnswer}
-                                        onChange={(e) => setCurrentAnswer(e.target.value)}
-                                        placeholder="Type your answer here..."
-                                        className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
-                                    />
-                                    <Button type="submit" variant="default">
-                                        Answer
-                                    </Button>
-                                </div>
-                            </form>
+                            {/* Only show form if hearts are not zero */}
+                            {heartCount > 0 && (
+                                <form onSubmit={handleAnswerSubmit} className="mt-6 w-full max-w-md">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={currentAnswer}
+                                            onChange={(e) => setCurrentAnswer(e.target.value)}
+                                            placeholder="Type your answer here..."
+                                            className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
+                                        />
+                                        <Button type="submit" variant="default">
+                                            Answer
+                                        </Button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>
