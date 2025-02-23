@@ -1,8 +1,13 @@
 import { Image, StyleSheet, Platform, Dimensions, Pressable, Animated, Easing, View } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
+
+import { router, Link } from 'expo-router';
+import { TouchableOpacity, Text } from 'react-native';
+
 import { router } from 'expo-router';
 import { useFonts, BubblegumSans_400Regular } from '@expo-google-fonts/bubblegum-sans';
 import { LinearGradient } from 'expo-linear-gradient';
+
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -179,6 +184,17 @@ export default function HomeScreen() {
         </Animated.View>
       </ThemedView>
 
+
+      {/* Grass */}
+      <ThemedView style={styles.grass} />
+
+      {/* Navigation Button */}
+      <Link href="/(tabs)/page" asChild>
+        <TouchableOpacity style={styles.homeMapButton}>
+          <Text style={styles.homeMapButtonText}>Go to Home Map</Text>
+        </TouchableOpacity>
+      </Link>
+
       {/* Mickey Character */}
       <Animated.Image
         source={isWalking ? 
@@ -193,6 +209,7 @@ export default function HomeScreen() {
         }]}
         resizeMode="contain"
       />
+
     </ThemedView>
   );
 }
@@ -313,5 +330,35 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
     zIndex: 2,  // Same level as background gradient
+  },
+  homeMapButton: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: '#FF4081',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    elevation: 8,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    borderWidth: 2,
+    borderColor: '#FFF',
+    transform: [{ scale: 1.1 }],
+  },
+  homeMapButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });
