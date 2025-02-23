@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { userPreferences } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-const OPENAI_API_KEY = "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"; // Replace with your actual key
+const OPENAI_API_KEY = "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"; // Replace with your actual key
 
 export async function POST(request: Request) {
     try {
