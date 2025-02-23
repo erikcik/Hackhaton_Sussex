@@ -16,28 +16,28 @@ const characters = [
   { 
     id: 1, 
     name: "Mickey", 
-    avatar: require("../assets/images/mickey_photos/mickey.png"),
+    avatar: require("./assets/images/mickey_photos/mickey.png"),
     isLocked: false,
     isSelected: true
   },
   { 
     id: 2, 
     name: "Father", 
-    avatar: require("../assets/images/mickey_photos/mickey_father.png"),
+    avatar: require("./assets/images/mickey_photos/mickey_father.png"),
     isLocked: true,
     isSelected: false
   },
   { 
     id: 3, 
     name: "Mother", 
-    avatar: require("../assets/images/mickey_photos/mickey_mother.png"),
+    avatar: require("./assets/images/mickey_photos/mickey_mother.png"),
     isLocked: true,
     isSelected: false
   },
   { 
     id: 4, 
     name: "Neighbor", 
-    avatar: require("../assets/images/mickey_photos/mickey_neighbor.png"),
+    avatar: require("./assets/images/mickey_photos/mickey_neighbor.png"),
     isLocked: true,
     isSelected: false
   },
@@ -117,7 +117,7 @@ export default function HomeScreen() {
 
       {/* Background Map */}
       <Image 
-        source={require("../assets/images/transparent_image.png")}
+        source={require("./assets/images/transparent_image.png")}
         style={styles.backgroundMap}
         resizeMode="cover"
       />
@@ -164,7 +164,7 @@ export default function HomeScreen() {
               />
               {character.isLocked && (
                 <Image 
-                  source={require("../assets/images/lock.png")}
+                  source={require("./assets/images/lock.png")}
                   style={styles.lockIcon}
                 />
               )}
@@ -182,8 +182,8 @@ export default function HomeScreen() {
       {/* Mickey Character */}
       <Animated.Image
         source={isWalking ? 
-          require("../assets/images/mickey_moving/MMC_Right_Anim.gif") :
-          require("../assets/images/mickey_moving/MMC_Front_Anim.gif")
+          require("./assets/images/mickey_moving/MMC_Right_Anim.gif") :
+          require("./assets/images/mickey_moving/MMC_Front_Anim.gif")
         }
         style={[styles.character, {
           transform: [
