@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { StyleSheet, ScrollView, Pressable, Dimensions, TextInput, SafeAreaView, View, Modal } from 'react-native';
 import { router } from 'expo-router';
 import Animated, { 
   FadeInDown, 
@@ -29,13 +29,31 @@ export default function PreferencesScreen() {
   const [preferences, setPreferences] = useState<UserPreferences>({
     firstName: '',
     lastName: '',
-    gender: 'other',
+    gender: 'boy',
     mainLanguage: '',
     preferredLanguage: '',
     age: 0
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const transitionProgress = useSharedValue(0);
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
+  const [currentLanguageType, setCurrentLanguageType] = useState<'main' | 'preferred'>('main');
+
+  const languages = [
+    'English',
+    'Spanish',
+    'French',
+    'Turkish'
+  ];
+
+  const handleLanguageSelect = (language: string) => {
+    if (currentLanguageType === 'main') {
+      setPreferences({ ...preferences, mainLanguage: language });
+    } else {
+      setPreferences({ ...preferences, preferredLanguage: language });
+    }
+    setIsLanguageModalVisible(false);
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -46,18 +64,22 @@ export default function PreferencesScreen() {
             style={styles.stepContainer}
           >
             <ThemedText style={styles.title}>What's your name? 🌟</ThemedText>
-            <ThemedView style={styles.inputContainer}>
-              <ThemedText style={styles.input} 
+            <View style={styles.inputContainer}>
+              <TextInput 
+                style={styles.input} 
                 placeholder="First Name"
                 value={preferences.firstName}
-                onChangeText={(text) => setPreferences({ ...preferences, firstName: text })}
+                onChangeText={(text: string) => setPreferences({ ...preferences, firstName: text })}
+                placeholderTextColor="#9ca3af"
               />
-              <ThemedText style={styles.input}
+              <TextInput
+                style={styles.input}
                 placeholder="Last Name"
                 value={preferences.lastName}
-                onChangeText={(text) => setPreferences({ ...preferences, lastName: text })}
+                onChangeText={(text: string) => setPreferences({ ...preferences, lastName: text })}
+                placeholderTextColor="#9ca3af"
               />
-            </ThemedView>
+            </View>
             <Pressable
               style={styles.nextButton}
               onPress={() => setStep('gender')}
@@ -74,8 +96,8 @@ export default function PreferencesScreen() {
             style={styles.stepContainer}
           >
             <ThemedText style={styles.title}>I am a... 🎈</ThemedText>
-            <ThemedView style={styles.genderContainer}>
-              {['boy', 'girl', 'other'].map((gender) => (
+            <View style={styles.genderContainer}>
+              {['boy', 'girl'].map((gender) => (
                 <Pressable
                   key={gender}
                   style={[
@@ -91,11 +113,11 @@ export default function PreferencesScreen() {
                     styles.genderText,
                     preferences.gender === gender && styles.selectedGenderText
                   ]}>
-                    {gender === 'boy' ? '👦' : gender === 'girl' ? '👧' : '🌈'} {gender}
+                    {gender === 'boy' ? '👦' : '👩'} {gender}
                   </ThemedText>
                 </Pressable>
               ))}
-            </ThemedView>
+            </View>
           </Animated.View>
         );
 
@@ -105,11 +127,17 @@ export default function PreferencesScreen() {
             entering={FadeInDown}
             style={styles.stepContainer}
           >
-            <ThemedText style={styles.title}>What languages do you speak? 🗣️</ThemedText>
-            <ThemedView style={styles.inputContainer}>
+            <View style={styles.titleContainer}>
+              <ThemedText style={styles.title}>What languages do you</ThemedText>
+              <ThemedText style={[styles.title, { marginTop: -20 }]}>speak? 🗣️</ThemedText>
+            </View>
+            <View style={styles.inputContainer}>
               <Pressable
                 style={styles.languageSelect}
-                onPress={() => {/* Add language picker logic */}}
+                onPress={() => {
+                  setCurrentLanguageType('main');
+                  setIsLanguageModalVisible(true);
+                }}
               >
                 <ThemedText style={styles.selectText}>
                   {preferences.mainLanguage || "Select main language"}
@@ -117,19 +145,54 @@ export default function PreferencesScreen() {
               </Pressable>
               <Pressable
                 style={styles.languageSelect}
-                onPress={() => {/* Add language picker logic */}}
+                onPress={() => {
+                  setCurrentLanguageType('preferred');
+                  setIsLanguageModalVisible(true);
+                }}
               >
                 <ThemedText style={styles.selectText}>
                   {preferences.preferredLanguage || "Select preferred language"}
                 </ThemedText>
               </Pressable>
-            </ThemedView>
+            </View>
             <Pressable
               style={styles.nextButton}
               onPress={() => setStep('age')}
             >
               <ThemedText style={styles.buttonText}>Next! 👉</ThemedText>
             </Pressable>
+
+            <Modal
+              visible={isLanguageModalVisible}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setIsLanguageModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <ThemedText style={styles.modalTitle}>
+                    Select {currentLanguageType === 'main' ? 'Main' : 'Preferred'} Language
+                  </ThemedText>
+                  <ScrollView style={styles.languageList}>
+                    {languages.map((language) => (
+                      <Pressable
+                        key={language}
+                        style={styles.languageOption}
+                        onPress={() => handleLanguageSelect(language)}
+                      >
+                        <ThemedText style={styles.languageOptionText}>{language}</ThemedText>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                  <Pressable
+                    style={styles.cancelButton}
+                    onPress={() => setIsLanguageModalVisible(false)}
+                  >
+                    <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
           </Animated.View>
         );
 
@@ -140,12 +203,14 @@ export default function PreferencesScreen() {
             style={styles.stepContainer}
           >
             <ThemedText style={styles.title}>How old are you? 🎂</ThemedText>
-            <ThemedText style={styles.input}
+            <TextInput
+              style={styles.input}
               placeholder="Age"
               keyboardType="numeric"
               maxLength={2}
               value={preferences.age.toString()}
-              onChangeText={(text) => setPreferences({ ...preferences, age: parseInt(text) || 0 })}
+              onChangeText={(text: string) => setPreferences({ ...preferences, age: parseInt(text) || 0 })}
+              placeholderTextColor="#9ca3af"
             />
             <Pressable
               style={styles.nextButton}
@@ -179,37 +244,41 @@ export default function PreferencesScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {renderStep()}
       </ScrollView>
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fce7f3', // pink-100 equivalent
+    backgroundColor: '#fce7f3', // Main app background (pink-100)
   },
   scrollContent: {
     flexGrow: 1,
     padding: 20,
+    paddingTop: 60,
   },
   stepContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    minHeight: Dimensions.get('window').height * 0.8,
+    justifyContent: 'flex-start',
     alignItems: 'center',
     gap: 24,
+    marginTop: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#7c3aed', // purple-600 equivalent
+    color: '#7c3aed',
     textAlign: 'center',
+    paddingVertical: 20,
+    marginTop: 20,
   },
   inputContainer: {
     width: '100%',
@@ -222,11 +291,13 @@ const styles = StyleSheet.create({
     borderColor: '#fbbf24', // yellow-400 equivalent
     borderRadius: 16,
     fontSize: 20,
+    color: '#1f2937', // text color
+    backgroundColor: '#fff', // Input fields background (white)
   },
   nextButton: {
     width: '100%',
     padding: 16,
-    backgroundColor: '#4ade80', // green-400 equivalent
+    backgroundColor: '#4ade80', // Next button background (green-400)
     borderRadius: 16,
     alignItems: 'center',
   },
@@ -243,12 +314,12 @@ const styles = StyleSheet.create({
   genderButton: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#dbeafe', // blue-100 equivalent
+    backgroundColor: '#dbeafe', // Unselected gender button background (blue-100)
     borderRadius: 16,
     alignItems: 'center',
   },
   selectedGender: {
-    backgroundColor: '#60a5fa', // blue-400 equivalent
+    backgroundColor: '#60a5fa', // Selected gender button background (blue-400)
   },
   genderText: {
     fontSize: 20,
@@ -264,6 +335,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: '#fbbf24',
     borderRadius: 16,
+    backgroundColor: '#fff', // Language select background (currently not set - let's add it)
   },
   selectText: {
     fontSize: 20,
@@ -279,5 +351,52 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 64,
     marginTop: 24,
+  },
+  titleContainer: {
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '80%',
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#7c3aed',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  languageList: {
+    maxHeight: 300,
+  },
+  languageOption: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  languageOptionText: {
+    fontSize: 18,
+    color: '#1f2937',
+  },
+  cancelButton: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: '#ef4444',
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 }); 
