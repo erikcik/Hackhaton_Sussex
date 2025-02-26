@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { userPreferences } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-const OPENAI_API_KEY = "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"; // Replace with your actual key
+const OPENAI_API_KEY = process.env.OPENAI_KEY // Replace with your actual key
 
 export async function POST(request: Request) {
     try {

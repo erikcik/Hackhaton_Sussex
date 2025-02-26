@@ -14,7 +14,7 @@ const PreferencesPage = () => {
   const [preferences, setPreferences] = useState<UserPreferences>({
     firstName: '',
     lastName: '',
-    gender: 'other',
+    gender: 'boy',
     mainLanguage: '',
     preferredLanguage: '',
     age: 0
@@ -93,8 +93,8 @@ const PreferencesPage = () => {
             className="space-y-6"
           >
             <h2 className="text-4xl font-comic-sans text-purple-600">I am a... 🎈</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {['boy', 'girl', 'other'].map((gender) => (
+            <div className="grid grid-cols-2 gap-4">
+              {['boy', 'girl'].map((gender) => (
                 <button
                   key={gender}
                   onClick={() => {
@@ -107,7 +107,7 @@ const PreferencesPage = () => {
                       : 'bg-blue-100 text-blue-800'
                   }`}
                 >
-                  {gender === 'boy' ? '👦' : gender === 'girl' ? '👧' : '🌈'} {gender}
+                  {gender === 'boy' ? '👦' : '👧'} {gender}
                 </button>
               ))}
             </div>
@@ -131,7 +131,7 @@ const PreferencesPage = () => {
               <option value="english">English</option>
               <option value="spanish">Spanish</option>
               <option value="french">French</option>
-              {/* Add more languages as needed */}
+              <option value="turkish">Turkish</option>
             </select>
             <select
               value={preferences.preferredLanguage}
@@ -142,7 +142,7 @@ const PreferencesPage = () => {
               <option value="english">English</option>
               <option value="spanish">Spanish</option>
               <option value="french">French</option>
-              {/* Add more languages as needed */}
+              <option value="turkish">Turkish</option>
             </select>
             <button
               onClick={() => setStep('age')}

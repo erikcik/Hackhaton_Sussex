@@ -2,7 +2,7 @@ import { OpenAI } from 'openai';
 import { NextResponse } from 'next/server';
 
 const openai = new OpenAI({
-    apiKey: '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'
+    apiKey: `${process.env.OPENAI_KEY}`
 });
 
 const SYSTEM_PROMPT = `You are Mickey Mouse's AI voice assistant, helping children learn English in a fun and engaging way. 

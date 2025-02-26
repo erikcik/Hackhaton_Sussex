@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 // Base64 encoded pixel art icons - these are the icons you shared
 const CHARACTER_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAYpJREFUWEftl99xgzAMxr8vfQ5D0BF4g2YERugI6QgdoRmBETJCRmhGICN0hI7gPhw+fOeAgQOX3l0fwGDpZ0uyLAn4Z0P+2R/+HGAYhvswDI9pmm7DMNycc1drbdd13TXP832e5/swDI9pmu7DMNycc9e2ba9FUezbtj2XZXnI8/zQtu25KIpDURSHtm3PZVke8jw/tG17Lori8JYA0zQ9nXOXaZqeWJ9zLvV9f+n7/tL3/cU5l6ZpeuJZmqYnACkRHX+c4FSAiGgPgD0wVyI6EdHxNQC+70R0IqLjnANEdASQEtGRiI5EdCSiI4CUAFJKKX+cc7ckSfgsSZIkxHtKKaWUUkrJn1LqRymlUkrJtVJKpZSS+5RSSiml5D2l1I9SSiWAPRHtrbXfxpgvY8yXMebLGPNljPkyxnwZY76MMV/GmC9jzNdsHzDGfBtjvo0x38aYb2PMtzHm2xjzbYz5Nsb8iQNmK2HYcv6UAyG2nD/tQIgt5087EOLL+UsciLHl/CUOFC8pxZbzVwD8Ak5GhyAQHyMLAAAAAElFTkSuQmCC"
@@ -12,9 +13,13 @@ const SCHOOL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAA
 
 export default function PixelMap() {
   const [isExpanding, setIsExpanding] = useState(false);
+  const router = useRouter();
 
   const handleHouseClick = () => {
     setIsExpanding(true);
+    setTimeout(() => {
+      router.push('/homemap');
+    }, 2000);
   };
 
   return (

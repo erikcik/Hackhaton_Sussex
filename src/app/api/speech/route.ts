@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const ELEVENLABS_API_KEY = 'sk_aeec6c0f218715a81f9b9d79fe819096de7da261d87c037a';
+const ELEVENLABS_API_KEY = process.env.ELEVEN_LABS_KEY;
 
 // Define voice IDs for different characters
 const characterVoices = {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
             headers: {
                 'Accept': 'audio/mpeg',
                 'Content-Type': 'application/json',
-                'xi-api-key': ELEVENLABS_API_KEY
+                'xi-api-key':`${process.env.ELEVEN_LABS_KEY}`
             },
             body: JSON.stringify({
                 text,
