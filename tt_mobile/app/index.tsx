@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Platform, Dimensions, Pressable, Animated, Easing, View } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 
-import { router, Link } from 'expo-router';
+import { Link } from 'expo-router';
 import { TouchableOpacity, Text } from 'react-native';
 
 import { router } from 'expo-router';
@@ -186,7 +186,6 @@ export default function HomeScreen() {
 
 
       {/* Grass */}
-      <ThemedView style={styles.grass} />
 
       {/* Navigation Button */}
       <Link href="/(tabs)/page" asChild>
